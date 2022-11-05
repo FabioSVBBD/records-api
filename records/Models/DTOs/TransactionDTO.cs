@@ -2,7 +2,7 @@
 
 public class TransactionDTO
 {
-    public String? Id { get; }
+    private String? Id { get; }
     public String? Type { get; }
     public float? Amount { get; }
 
