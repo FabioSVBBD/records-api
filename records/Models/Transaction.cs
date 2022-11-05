@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using records.Models.DTOs;
+﻿using records.Models.DTOs;
 
 namespace records.Models;
 public class Transaction
 {
     public String Id { get; }
-    public string Type { get; }
-    public float Amount { get; }
+    public string Type { get; set; }
+    public float Amount { get; set; }
     
     public DateTime Timestamp { get; private set; }
 
@@ -18,7 +17,8 @@ public class Transaction
         Timestamp = DateTime.Now;
     }
 
-    public TransactionDTO ToDTO() => new(Id, Type, Amount);
+    public TransactionReadDTO ToReadDTO() => new(Id, Type, Amount);
+    public TransactionWriteDTO ToWriteDTO() => new(Type, Amount);
 }
 
 public static class TransactionType
