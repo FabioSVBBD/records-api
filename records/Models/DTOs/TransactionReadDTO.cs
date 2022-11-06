@@ -5,7 +5,6 @@ public class TransactionReadDTO
     public String? Id { get; }
     public String? Type { get; }
     public float? Amount { get; }
-
     public DateTime? Date { get; }
 
     public TransactionReadDTO(String? id, String? type, float? amount, DateTime? date)

@@ -1,4 +1,5 @@
 ﻿namespace records.Models;
+
 public class User
 {
     public String Id { get; }
