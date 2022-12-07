@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using records.Models;
 using records.Utilities;
+using records.Model;
+using records.Model.DTO;
 
 namespace records.Controllers;
 
@@ -8,22 +9,25 @@ namespace records.Controllers;
 [Route("users")]
 public class UserController: ControllerBase
 {
+    private readonly RecordsDbContext Context = new();
+
     [HttpGet]
     public IActionResult GetUser([FromQuery] String id)
     {
-        User? user = Mock.Users.Find((user) => user.Id == id);
+        User? user = Context.Users.Where(user => user.Id == id).ToList().FirstOrDefault();
 
         if (user == null)
             return NotFound(new Message($"User with id {id} not found"));
 
-        return Ok(user);
+        return Ok(new UserDTO(user));
     }
 
     [HttpPost]
     public IActionResult AddUser()
     {
         User user = new();
-        Mock.Users.Add(user);
+        Context.Users.Add(user);
+        Context.SaveChanges();
 
         return Ok(new Response<User>("New user created", user));
     }
