@@ -23,9 +23,15 @@ public class UserController: ControllerBase
     }
 
     [HttpPost]
-    public IActionResult AddUser()
+    public IActionResult AddUser([FromQuery] string id)
     {
-        User user = new();
+        User? match = Context.Users.Where((user) => user.Id == id).FirstOrDefault();
+
+        if (match != null) {
+            return BadRequest(new Message($"User with id {id} already exists"));
+        }
+
+        User user = new(id);
         Context.Users.Add(user);
         Context.SaveChanges();
 

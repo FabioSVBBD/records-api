@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using records.Model;
 using records.Model.DTO;
-//using records.Models;
-//using records.Models.DTOs;
 using records.Utilities;
 
 namespace records.Controllers;
@@ -14,7 +12,7 @@ public class TransactionController : ControllerBase
     private readonly RecordsDbContext Context = new();
 
     [HttpGet]
-    public IActionResult GetAllTransactions([FromRoute] String userid, [FromQuery] String? id)
+    public IActionResult GetAllTransactions([FromRoute] String userid, [FromQuery] String? id, [FromQuery] int? year, [FromQuery] int? month, [FromQuery] int? day)
     {
         User? user = Context.Users.Find(userid);
 
@@ -22,9 +20,16 @@ public class TransactionController : ControllerBase
             return BadRequest(new Message($"user with id {userid} does not exist"));
 
         if (id == null)
-            return Ok(new Response<IEnumerable<TransactionReadDTO>>("All Transactions", Context.Transactions.Where(t => t.UserId == user.Id).Select(transaction => new TransactionReadDTO(transaction))));
+        {
+            List<Transaction> matches = Context.Transactions.Where(t => (t.UserId == user.Id) && 
+            (year == null || t.Date.Year == year) &&
+            (month == null || t.Date.Month == month) &&
+            (day == null || t.Date.Day == day)).ToList();
 
-        Transaction? match = user.Transactions.Where(transaction => transaction.Id == id).FirstOrDefault();
+            return Ok(new Response<IEnumerable<TransactionReadDTO>>("All Transactions", matches.Select(match => new TransactionReadDTO(match))));
+        }
+
+        Transaction? match = Context.Transactions.Where(transaction => transaction.Id == id && transaction.UserId == userid).FirstOrDefault();
 
         if (match == null)
             return NotFound(new Message($"Transaction with id {id} not found"));
@@ -76,51 +81,44 @@ public class TransactionController : ControllerBase
         return Ok(new Response<Transaction>($"Transaction with id {id} removed", match));
     }
 
-    //[HttpPatch]
-    //public IActionResult PatchTransaction([FromRoute] String userid, [FromQuery] String id, [FromBody] TransactionWriteDTO patch)
-    //{
-    //    User? user = Mock.Users.Find((user) => user.Id == userid);
+    [HttpPut]
+    public IActionResult PutTransaction([FromRoute] String userid, [FromQuery] String id, [FromBody] TransactionWriteDTO put)
+    {
+        Console.WriteLine(put.Date);
 
-    //    if (user == null)
-    //        return BadRequest(new Message($"user with id {userid} does not exist"));
 
-    //    Transaction? match = user.Transactions.Find((transaction) => transaction.Id == id);
+        User? user = Context.Users.Where((user) => user.Id == userid).FirstOrDefault();
 
-    //    if (match == null)
-    //        return NotFound(new Message($"Transaction with id {id} not found"));
+        if (user == null)
+            return BadRequest(new Message($"user with id {userid} does not exist"));
 
-    //    if (patch.Type != null)
-    //        match.Type = patch.Type;
+        Transaction? match = Context.Transactions.Where((transaction) => transaction.Id == id && transaction.UserId == userid).FirstOrDefault();
 
-    //    if (patch.Amount != null)
-    //        match.Amount = patch.Amount.Value;
+        if (match == null)
+            return NotFound(new Message($"Transaction with id {id} not found"));
 
-    //    if (patch.Date != null)
-    //        match.Date = patch.Date.Value;
+        if (put.Type == null)
+            return BadRequest(new Message("Fields type, amount and date required"));
 
-    //    return Ok(new Response<TransactionReadDTO>($"Transaction with id {id} updated", match.ToReadDTO()));
-    //}
+        TransactionType? matchedType = Context.TransactionTypes.Where((t) => t.Description == put.Type).FirstOrDefault();
 
-    //[HttpPut]
-    //public IActionResult PutTransaction([FromRoute] String userid, [FromQuery] String id, [FromBody] TransactionWriteDTO put)
-    //{
-    //    User? user = Mock.Users.Find((user) => user.Id == userid);
+        if (matchedType == null)
+            return BadRequest(new Message($"The matched type ${put.Type} is invalid"));
 
-    //    if (user == null)
-    //        return BadRequest(new Message($"user with id {userid} does not exist"));
+        match.Amount = put.Amount;
+        match.TypeId = matchedType.Id;
 
-    //    Transaction? match = user.Transactions.Find((transaction) => transaction.Id == id);
+        Console.WriteLine(match.Date);
+        Console.WriteLine(put.Date);
+        
+        match.Date = put.Date;
+        match.Description = put.Description;
 
-    //    if (match == null)
-    //        return NotFound(new Message($"Transaction with id {id} not found"));
+        Console.WriteLine(match.Date);
 
-    //    if (put.Amount == null || put.Type == null || put.Date == null)
-    //        return BadRequest(new Message("Fields type, amount and date required"));
+        Context.Update(match);
+        Context.SaveChanges();
 
-    //    match.Amount = put.Amount.Value;
-    //    match.Type = put.Type;
-    //    match.Date = put.Date.Value;
-
-    //    return Ok(new Response<TransactionReadDTO>($"Transaction with id {id} updated", match.ToReadDTO()));
-    //}
+        return Ok(new Response<TransactionReadDTO>($"Transaction with id {id} updated", new TransactionReadDTO(match)));
+    }
 }

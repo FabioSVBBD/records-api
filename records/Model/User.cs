@@ -11,6 +11,12 @@ public partial class User
         Timestamp = DateTime.Now;
     }
 
+    public User (string userid)
+    {
+        Id = userid;
+        Timestamp = DateTime.Now;
+    }
+
 
     public string Id { get; set; } = null!;
 
