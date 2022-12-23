@@ -1,14 +1,18 @@
 # syntax=docker/dockerfile:1
-FROM mcr.microsoft.com/dotnet/sdk:6.0 as build-env
-WORKDIR /records
 
-COPY records/*.csproj .
-RUN dotnet restore
-COPY records .
-RUN dotnet publish -c Release -o /publish
+# Build
+FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
+WORKDIR /source
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 as runtime
-WORKDIR /records
-COPY --from=build-env /publish .
-EXPOSE 80 443
+COPY . .
+RUN dotnet restore './records/records.csproj' --disable-parallel
+RUN dotnet publish './records/records.csproj' -c release -o /app --no-restore
+
+# Serve
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-focal
+WORKDIR /app
+COPY --from=build /app ./
+
+EXPOSE 5000
+
 ENTRYPOINT ["dotnet", "records.dll"]
