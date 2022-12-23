@@ -37,4 +37,10 @@ public class UserController: ControllerBase
 
         return Ok(new Response<User>("New user created", user));
     }
+
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return Ok(new Message("All Good"));
+    }
 }

@@ -12,8 +12,8 @@ builder.Services.AddCors(options =>
         policy =>
         {
             policy
-                .WithOrigins("http://localhost:5173")
-                .WithHeaders(HeaderNames.ContentType, HeaderNames.Accept, HeaderNames.AccessControlAllowHeaders)
+                .WithOrigins("http://localhost:5173", "https://records-svelte.vercel.app")
+                .WithHeaders(HeaderNames.ContentType, HeaderNames.Accept, HeaderNames.AccessControlAllowHeaders, HeaderNames.AccessControlAllowOrigin)
                 .WithMethods("GET", "POST", "PATCH", "PUT");
         });
 });
